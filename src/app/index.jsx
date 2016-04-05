@@ -1,13 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import PieChart from './PieChart.jsx';
+import BarChart from './BarChart.jsx';
 
-let mydata = [{name: "Germany", population: 80.62},
-             {name: "France", population: 66.03},
-             {name: "USA", population: 318.9},
-             {name: "Serbia", population: 7.164},
-             {name: "India", population: 1252},
-             {name: "Mexico", population: 122.3}];
+let mydata = [{name: "Germany", value: 80.62},
+             {name: "France", value: 66.03},
+             {name: "USA", value: 318.9},
+             {name: "Serbia", value: 7.164},
+             {name: "India", value: 1252},
+             {name: "Mexico", value: 122.3}];
+
+let groups = [{name: "Authenticity", categories: [{name: "Meaningful", value:89},{name: "Meaningful", value:89},{name: "Different", value:86},{name: "Parent Branding", value:56},{name: "Variant Branding", value:44}]},
+              {name: "Relevance", categories: [{name: "Relevance", value:75},{name: "Persuasion", value:45},{name: "Main Point", value:34}]},
+              {name: "Talkability", categories: [{name: "Enjoyment", value:78},{name: "Active Involvement", value:36},{name: "Expressiveness", value:0}]},
+             ];
 
 
 class App extends React.Component {
@@ -17,11 +22,11 @@ class App extends React.Component {
   }
   handleClick(){
     this.state.datastate[4].population -= 100;
-    this.setState({datastate: this.state.datastate});
+    this.setState({title: "new title"});
     this.forceUpdate();
   }
   render () {
-    return <div><p> Hello React!</p><PieChart data={this.state.datastate} title={"Populations"}/><button onClick={this.handleClick.bind(this)}>change data</button></div>;
+    return <div style={{height: 400, width: 600}}><p> Hello React!</p><BarChart title={this.state.title} data={this.state.datastate}/><button onClick={this.handleClick.bind(this)}>change data</button></div>;
   }
 }
 

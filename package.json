@@ -18,5 +18,8 @@
     "react": "^0.14.8",
     "react-dom": "^0.14.8",
     "webpack": "^1.12.14"
+  },
+  "devDependencies": {
+    "css-loader": "^0.23.1"
   }
 }

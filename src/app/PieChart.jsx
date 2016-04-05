@@ -3,13 +3,16 @@ import ReactDOM from 'react-dom';
 import d3 from 'd3';
 
 export default class PieChart extends React.Component {
+  constructor(props){
+    super(props);
+  }
   componentDidMount() {
     var dom =  ReactDOM.findDOMNode(this);
-    createChart(dom, this.props);
+    createChart.call(this, dom, this.props);
   }
-  shouldComponentUpdate() {
+  shouldComponentUpdate(nextProps) {
     var dom =  ReactDOM.findDOMNode(this);
-    createChart(dom, this.props);
+    updateChart.call(this, dom, nextProps);
     return false;
   }
   render () {
@@ -37,29 +40,51 @@ function createChart(dom, props){
   var width = props.width;
   var height = props.height;
   width = width + 200;
+
+
+
+  this.chart = d3.select(dom).append('svg').attr('class', 'd3').attr('width', width).attr('height', height)
+        .append("g")
+          .attr("transform", "translate(" + (props.width/2) + "," + (height/2) + ")");
+
+  updateChart.call(this, dom, props);
+
+};
+
+function updateChart(dom, props){
+
+  console.log('here');
+
   var data = props.data;
   var colors = ['#FD9827', '#DA3B21', '#3669C9', '#1D9524', '#971497', '#654578'];
   var sum = data.reduce(function(memo, num){ return memo + num.population; }, 0);
 
-
-  var chart = d3.select(dom).append('svg').attr('class', 'd3').attr('width', width).attr('height', height)
-        .append("g")
-          .attr("transform", "translate(" + (props.width/2) + "," + (height/2) + ")");
   var outerRadius = props.width/2.2;
   var innerRadius = props.width/8;
   var arc = d3.svg.arc()
       .outerRadius(outerRadius)
       .innerRadius(innerRadius);
 
-  var pie = d3.layout.pie()
-      .value(function (d) { return d.population; });
+  var pie = d3.layout.pie().value(function (d) { return d.population; });
 
-  var g = chart.selectAll(".arc")
-        .data(pie(data))
-        .enter().append("g")
-        .attr("class", "arc");
+  var whenupdate = this.chart.selectAll(".arc").data(pie(data));
 
-  g.append("path")
+  var whenenter = whenupdate.enter().append("g").attr("class", "arc");
+
+  var whenexit = whenupdate.exit();
+
+  whenupdate.selectAll("path").transition().delay(function(d, i) { return i * 400; }).duration(500)
+  .attrTween('d', function(d) {
+       var i = d3.interpolate(d.startAngle, d.endAngle);
+       return function(t) {
+           d.endAngle = i(t);
+         return arc(d);
+       }
+  });
+
+  whenexit.remove();
+
+  whenenter.append("path")
     .style("fill", function(d, i) { return colors[i]; })
     .transition().delay(function(d, i) { return i * 400; }).duration(500)
     .attrTween('d', function(d) {
@@ -69,12 +94,13 @@ function createChart(dom, props){
            return arc(d);
          }
     });
+
   var center =
-  g.filter(function(d) { return d.endAngle - d.startAngle > 0.3; }).append("text").style("fill", "white")
+  whenenter.filter(function(d) { return d.endAngle - d.startAngle > 0.3; }).append("text").style("fill", "white")
     .attr('transform', function(d){
       return "translate(" + arc.centroid(d) + ")";
     })
     .attr("text-anchor", "middle").attr("dy", ".35em")
     .text(function(d) { return d.value; });
 
-};
+}
