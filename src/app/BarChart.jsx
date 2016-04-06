@@ -8,6 +8,7 @@ export default class BarChart extends React.Component {
     super(props);
   }
   componentDidMount() {
+    console.log('mount');
     this.createChart(this.props);
   }
   shouldComponentUpdate(nextProps) {
@@ -19,13 +20,21 @@ export default class BarChart extends React.Component {
     return (
       <div ref="wrapper">
         <h3/>
-        <div id="chart" ref="chart"/>
+        <svg/>
       </div>
     );
   }
-  createChart(props){
-    this.place = d3.select("[data-reactid='" + this.refs.wrapper.getAttribute("data-reactid") + "']");
-    this.chartframe = this.place.select('#chart').append('svg').attr('width', '100%').attr('height', '100%');
+  createChart(props){ //run once after mounting
+    this.place = d3.select(this.refs.wrapper);
+    this.chartframe = this.place.select('svg').attr('width', props.width).attr('height', props.height).attr('class', 'chart');
+    this.framewidth = props.width;
+    this.frameheight = props.height;
+    this.chartheight = this.frameheight - props.margin.top - props.margin.bottom;
+    this.chartwidth = this.framewidth - props.margin.left - props.margin.right;
+
+    this.verticalGuide = this.chartframe.append('g').attr('transform', 'translate(' + props.margin.left + ', ' + props.margin.top + ')');
+    this.chartspace = this.chartframe.append('g').attr('transform', 'translate(' + props.margin.left + ', ' + props.margin.top + ')');
+    this.horizontalGuide = this.chartframe.append('g').attr('transform', 'translate(' + props.margin.left + ', ' + (this.chartheight + props.margin.top) + ')');
     this.updateChart(props);
   }
   updateChart(props){
@@ -34,89 +43,67 @@ export default class BarChart extends React.Component {
     this.updateBars(props);
   }
   updateTitle(props){
-    this.place.select("h3").text(props.title || "Untitled");
+    this.place.select("h3").text(props.title);
   }
   updateBars(props){
-
-    const framewidth = this.refs.chart.offsetWidth;
-    const frameheight = this.refs.chart.offsetHeight;
-
+    //used for responsiveness (the arrangement of elements in the chart adjust to the container dimensions)
     const chartdata = props.data || [];
-    const margin = {top: 30, right: 10, bottom: 30, left: 50};
 
-    const height = frameheight - margin.top - margin.bottom,
-    width = framewidth - margin.left - margin.right,
-    barWidth = 40,
-    barOffset = 20;
-
-    var dynamicColor;
-    var yScale = d3.scale.linear()
-    .domain([0, d3.max(chartdata,d=>d.value)])
-    .range([0, height])
-
-    var xScale = d3.scale.ordinal()
-    .domain(d3.range(0, chartdata.length))
-    .rangeBands([0, width])
-
-    var colors = d3.scale.linear()
+    let dynamicColor;
+    let yScale = d3.scale.linear().domain([0, d3.max(chartdata,d=>d.value)]).range([0, this.chartheight])
+    let xScale = d3.scale.ordinal().domain(chartdata.map(d=>d.name)).rangeBands([0, this.chartwidth])
+    let colors = d3.scale.linear()
     .domain([0, chartdata.length * 0.33, chartdata.length * 0.66, chartdata.length])
     .range(['#d6e9c6', '#bce8f1', '#faebcc', '#ebccd1'])
 
-    var awesome = this.chartframe.attr('class', 'chart')
-    .append('g')
-    .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-    .selectAll('rect').data(chartdata)
-    .enter().append('rect')
-    .attr('class','bar')
-    .style('fill',(data, i)=>{return colors(i)})
-    .attr('width', xScale.rangeBand())
-    .attr('x', (data, i)=>{return xScale(i)})
+    let update_rect = this.chartspace.selectAll('rect').data(chartdata);
+    let enter_rect = update_rect.enter().append('rect');
+    let exit_rect = update_rect.exit().remove();
+
+    enter_rect.attr('class','chartbar')
+    .style('fill',(data, i)=>{return data.color || colors(i)})
     .attr('height', 0)
-    .attr('y', height)
+    .attr('y', this.chartheight)
     .on('mouseover', function(data) {
       dynamicColor = this.style.fill;
         d3.select(this).classed("mouseover", true).style('fill',d3.rgb(dynamicColor).darker(0.1));
     })
-
     .on('mouseout', function (data) {
         d3.select(this).classed("mouseover", false).style('fill',dynamicColor);
     })
-
-    awesome.transition()
+    update_rect.attr('width', xScale.rangeBand())
+    .attr('x', (data, i)=>{return xScale(data.name)})
+    .transition()
     .attr('height', data=>{return yScale(data.value)})
-    .attr('y', data=>{return height - yScale(data.value)})
+    .attr('y', data=>{return this.chartheight - yScale(data.value)})
     .delay((data, i)=>{return i * 20})
-    .duration(2000)
-    .ease('elastic');
+    .duration(500)
+    .ease('sin');
 
-    var verticalGuideScale = d3.scale.linear()
-    .domain([0, d3.max(chartdata,d=>d.value)])
-    .range([height, 0])
+    let verticalGuideScale = d3.scale.linear().domain([0, d3.max(chartdata,d=>d.value)]).range([this.chartheight, 0])
+    let vAxis = d3.svg.axis().scale(verticalGuideScale).orient('left').ticks(this.props.ticks);
 
-    var vAxis = d3.svg.axis()
-    .scale(verticalGuideScale)
-    .orient('left')
-    .ticks(10)
+    vAxis(this.verticalGuide);
+    this.verticalGuide.selectAll('path').attr('class','axisline');
+    this.verticalGuide.selectAll('line').attr('class','axislinetick');
 
-var verticalGuide = d3.select('svg').append('g')
-vAxis(verticalGuide)
-verticalGuide.attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-verticalGuide.selectAll('path')
-    .style({fill: 'none', stroke: "#3c763d"})
-verticalGuide.selectAll('line')
-    .style({stroke: "#3c763d"})
-
-var hAxis = d3.svg.axis()
-    .scale(xScale)
-    .orient('bottom')
-    .ticks(chartdata.size)
-
-var horizontalGuide = d3.select('svg').append('g')
-hAxis(horizontalGuide)
-horizontalGuide.attr('transform', 'translate(' + margin.left + ', ' + (height + margin.top) + ')')
-horizontalGuide.selectAll('path')
-    .style({fill: 'none', stroke: "#3c763d"})
-horizontalGuide.selectAll('line')
-    .style({stroke: "#3c763d"});
+    let hAxis = d3.svg.axis().scale(xScale).orient('bottom').ticks(chartdata.size);
+    hAxis(this.horizontalGuide)
+    this.horizontalGuide.selectAll('path').attr('class','axisline');
+    this.horizontalGuide.selectAll('line').attr('class','axislinetick');
   }
 }
+
+
+BarChart.propTypes = {
+  // width: React.PropTypes.number,
+  // height: React.PropTypes.number,
+  // title: React.PropTypes.string,
+};
+BarChart.defaultProps = {
+  margin: {top: 30, right: 10, bottom: 30, left: 50},
+  width: 600,
+  height: 400,
+  title: 'Untitled',
+  ticks: 5
+};

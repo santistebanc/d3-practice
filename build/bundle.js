@@ -59,9 +59,13 @@
 	
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 	
-	var _BarChart = __webpack_require__(/*! ./BarChart.jsx */ 165);
+	var _BarChart = __webpack_require__(/*! ./BarChart.jsx */ 159);
 	
 	var _BarChart2 = _interopRequireDefault(_BarChart);
+	
+	var _PieChart = __webpack_require__(/*! ./PieChart.jsx */ 165);
+	
+	var _PieChart2 = _interopRequireDefault(_PieChart);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -90,7 +94,10 @@
 	  _createClass(App, [{
 	    key: 'handleClick',
 	    value: function handleClick() {
-	      this.state.datastate[4].population -= 100;
+	      this.state.datastate.forEach(function (item, i) {
+	        item.value = Math.round(Math.random() * 1000);
+	      });
+	      this.setState({ datastate: this.state.datastate });
 	      this.setState({ title: "new title" });
 	      this.forceUpdate();
 	    }
@@ -99,13 +106,26 @@
 	    value: function render() {
 	      return _react2.default.createElement(
 	        'div',
-	        { style: { height: 400, width: 600 } },
+	        null,
 	        _react2.default.createElement(
 	          'p',
 	          null,
-	          ' Hello React!'
+	          ' D3 Charts!'
 	        ),
-	        _react2.default.createElement(_BarChart2.default, { title: this.state.title, data: this.state.datastate }),
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(
+	            'div',
+	            { style: { width: '50%', display: 'inline-box', float: 'left' } },
+	            _react2.default.createElement(_BarChart2.default, { title: this.state.title, data: this.state.datastate })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { style: { width: '50%', display: 'inline-box', float: 'right' } },
+	            _react2.default.createElement(_PieChart2.default, { title: this.state.title, data: this.state.datastate })
+	          )
+	        ),
 	        _react2.default.createElement(
 	          'button',
 	          { onClick: this.handleClick.bind(this) },
@@ -20200,7 +20220,173 @@
 
 
 /***/ },
-/* 159 */,
+/* 159 */
+/*!******************************!*\
+  !*** ./src/app/BarChart.jsx ***!
+  \******************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _d = __webpack_require__(/*! d3 */ 160);
+	
+	var _d2 = _interopRequireDefault(_d);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	__webpack_require__(/*! ./BarChartStyles.css */ 161);
+	
+	var BarChart = function (_React$Component) {
+	  _inherits(BarChart, _React$Component);
+	
+	  function BarChart(props) {
+	    _classCallCheck(this, BarChart);
+	
+	    return _possibleConstructorReturn(this, Object.getPrototypeOf(BarChart).call(this, props));
+	  }
+	
+	  _createClass(BarChart, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      console.log('mount');
+	      this.createChart(this.props);
+	    }
+	  }, {
+	    key: 'shouldComponentUpdate',
+	    value: function shouldComponentUpdate(nextProps) {
+	      this.updateChart(nextProps);
+	      return false;
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      //this is just run once when mounting for first time
+	      return _react2.default.createElement(
+	        'div',
+	        { ref: 'wrapper' },
+	        _react2.default.createElement('h3', null),
+	        _react2.default.createElement('svg', null)
+	      );
+	    }
+	  }, {
+	    key: 'createChart',
+	    value: function createChart(props) {
+	      //run once after mounting
+	      this.place = _d2.default.select(this.refs.wrapper);
+	      this.chartframe = this.place.select('svg').attr('width', props.width).attr('height', props.height).attr('class', 'chart');
+	      this.framewidth = props.width;
+	      this.frameheight = props.height;
+	      this.chartheight = this.frameheight - props.margin.top - props.margin.bottom;
+	      this.chartwidth = this.framewidth - props.margin.left - props.margin.right;
+	
+	      this.verticalGuide = this.chartframe.append('g').attr('transform', 'translate(' + props.margin.left + ', ' + props.margin.top + ')');
+	      this.chartspace = this.chartframe.append('g').attr('transform', 'translate(' + props.margin.left + ', ' + props.margin.top + ')');
+	      this.horizontalGuide = this.chartframe.append('g').attr('transform', 'translate(' + props.margin.left + ', ' + (this.chartheight + props.margin.top) + ')');
+	      this.updateChart(props);
+	    }
+	  }, {
+	    key: 'updateChart',
+	    value: function updateChart(props) {
+	      //this should be called everytime something in the chart has to change
+	      this.updateTitle(props);
+	      this.updateBars(props);
+	    }
+	  }, {
+	    key: 'updateTitle',
+	    value: function updateTitle(props) {
+	      this.place.select("h3").text(props.title);
+	    }
+	  }, {
+	    key: 'updateBars',
+	    value: function updateBars(props) {
+	      var _this2 = this;
+	
+	      //used for responsiveness (the arrangement of elements in the chart adjust to the container dimensions)
+	      var chartdata = props.data || [];
+	
+	      var dynamicColor = void 0;
+	      var yScale = _d2.default.scale.linear().domain([0, _d2.default.max(chartdata, function (d) {
+	        return d.value;
+	      })]).range([0, this.chartheight]);
+	      var xScale = _d2.default.scale.ordinal().domain(chartdata.map(function (d) {
+	        return d.name;
+	      })).rangeBands([0, this.chartwidth]);
+	      var colors = _d2.default.scale.linear().domain([0, chartdata.length * 0.33, chartdata.length * 0.66, chartdata.length]).range(['#d6e9c6', '#bce8f1', '#faebcc', '#ebccd1']);
+	
+	      var update_rect = this.chartspace.selectAll('rect').data(chartdata);
+	      var enter_rect = update_rect.enter().append('rect');
+	      var exit_rect = update_rect.exit().remove();
+	
+	      enter_rect.attr('class', 'chartbar').style('fill', function (data, i) {
+	        return data.color || colors(i);
+	      }).attr('height', 0).attr('y', this.chartheight).on('mouseover', function (data) {
+	        dynamicColor = this.style.fill;
+	        _d2.default.select(this).classed("mouseover", true).style('fill', _d2.default.rgb(dynamicColor).darker(0.1));
+	      }).on('mouseout', function (data) {
+	        _d2.default.select(this).classed("mouseover", false).style('fill', dynamicColor);
+	      });
+	      update_rect.attr('width', xScale.rangeBand()).attr('x', function (data, i) {
+	        return xScale(data.name);
+	      }).transition().attr('height', function (data) {
+	        return yScale(data.value);
+	      }).attr('y', function (data) {
+	        return _this2.chartheight - yScale(data.value);
+	      }).delay(function (data, i) {
+	        return i * 20;
+	      }).duration(500).ease('sin');
+	
+	      var verticalGuideScale = _d2.default.scale.linear().domain([0, _d2.default.max(chartdata, function (d) {
+	        return d.value;
+	      })]).range([this.chartheight, 0]);
+	      var vAxis = _d2.default.svg.axis().scale(verticalGuideScale).orient('left').ticks(this.props.ticks);
+	
+	      vAxis(this.verticalGuide);
+	      this.verticalGuide.selectAll('path').attr('class', 'axisline');
+	      this.verticalGuide.selectAll('line').attr('class', 'axislinetick');
+	
+	      var hAxis = _d2.default.svg.axis().scale(xScale).orient('bottom').ticks(chartdata.size);
+	      hAxis(this.horizontalGuide);
+	      this.horizontalGuide.selectAll('path').attr('class', 'axisline');
+	      this.horizontalGuide.selectAll('line').attr('class', 'axislinetick');
+	    }
+	  }]);
+	
+	  return BarChart;
+	}(_react2.default.Component);
+	
+	exports.default = BarChart;
+	
+	
+	BarChart.propTypes = {
+	  // width: React.PropTypes.number,
+	  // height: React.PropTypes.number,
+	  // title: React.PropTypes.string,
+	};
+	BarChart.defaultProps = {
+	  margin: { top: 30, right: 10, bottom: 30, left: 50 },
+	  width: 600,
+	  height: 400,
+	  title: 'Untitled',
+	  ticks: 5
+	};
+
+/***/ },
 /* 160 */
 /*!********************!*\
   !*** ./~/d3/d3.js ***!
@@ -29763,8 +29949,52 @@
 	}();
 
 /***/ },
-/* 161 */,
-/* 162 */,
+/* 161 */
+/*!************************************!*\
+  !*** ./src/app/BarChartStyles.css ***!
+  \************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(/*! !./../../~/css-loader!./BarChartStyles.css */ 162);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(/*! ./../../~/style-loader/addStyles.js */ 164)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../node_modules/css-loader/index.js!./BarChartStyles.css", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js!./BarChartStyles.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 162 */
+/*!***************************************************!*\
+  !*** ./~/css-loader!./src/app/BarChartStyles.css ***!
+  \***************************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(/*! ./../../~/css-loader/lib/css-base.js */ 163)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, ".chartbar{\n  stroke: #555;\n  stroke-width: 1;\n}\n\n.axisline{\n  fill: none;\n  stroke: #555;\n}\n\n.axislinetick{\n  stroke: #555;\n}\n", ""]);
+	
+	// exports
+
+
+/***/ },
 /* 163 */
 /*!**************************************!*\
   !*** ./~/css-loader/lib/css-base.js ***!
@@ -30081,7 +30311,7 @@
 /***/ },
 /* 165 */
 /*!******************************!*\
-  !*** ./src/app/BarChart.jsx ***!
+  !*** ./src/app/PieChart.jsx ***!
   \******************************/
 /***/ function(module, exports, __webpack_require__) {
 
@@ -30109,18 +30339,18 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
-	__webpack_require__(/*! ./BarChartStyles.css */ 166);
+	__webpack_require__(/*! ./PieChartStyles.css */ 166);
 	
-	var BarChart = function (_React$Component) {
-	  _inherits(BarChart, _React$Component);
+	var PieChart = function (_React$Component) {
+	  _inherits(PieChart, _React$Component);
 	
-	  function BarChart(props) {
-	    _classCallCheck(this, BarChart);
+	  function PieChart(props) {
+	    _classCallCheck(this, PieChart);
 	
-	    return _possibleConstructorReturn(this, Object.getPrototypeOf(BarChart).call(this, props));
+	    return _possibleConstructorReturn(this, Object.getPrototypeOf(PieChart).call(this, props));
 	  }
 	
-	  _createClass(BarChart, [{
+	  _createClass(PieChart, [{
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this.createChart(this.props);
@@ -30139,14 +30369,31 @@
 	        'div',
 	        { ref: 'wrapper' },
 	        _react2.default.createElement('h3', null),
-	        _react2.default.createElement('div', { id: 'chart', ref: 'chart' })
+	        _react2.default.createElement('svg', null)
 	      );
 	    }
 	  }, {
 	    key: 'createChart',
 	    value: function createChart(props) {
-	      this.place = _d2.default.select("[data-reactid='" + this.refs.wrapper.getAttribute("data-reactid") + "']");
-	      this.chartframe = this.place.select('#chart').append('svg').attr('width', '100%').attr('height', '100%');
+	      //run once after mounting
+	      this.place = _d2.default.select(this.refs.wrapper);
+	      this.chartframe = this.place.select('svg').attr('width', props.width).attr('height', props.height).attr('class', 'chart');
+	      this.framewidth = props.width;
+	      this.frameheight = props.height;
+	      this.legendboxwidth = 150;
+	      this.boxmargin = 5;
+	      this.chartheight = this.frameheight - props.margin.top - props.margin.bottom;
+	      this.chartwidth = this.framewidth - props.margin.left - props.margin.right;
+	      this.outerRadius = props.height / 2.2;
+	      this.innerRadius = props.height / 8;
+	      this.colors = _d2.default.scale.linear().domain([0, props.data.length * 0.33, props.data.length * 0.66, props.data.length]).range(['#d6e9c6', '#bce8f1', '#faebcc', '#ebccd1']);
+	      this.chartspace = this.chartframe.append('g').attr('transform', 'translate(' + (props.margin.left + this.outerRadius) + ', ' + (props.margin.top + this.outerRadius) + ')');
+	      var donut = _d2.default.svg.arc().innerRadius(this.innerRadius).outerRadius(this.outerRadius).startAngle(0).endAngle(2 * Math.PI);
+	      this.chartspace.append("path").attr('class', 'donut').attr('d', donut);
+	
+	      this.legendspace = this.chartframe.append('g').attr('transform', 'translate(' + (props.width - props.margin.right - this.legendboxwidth) + ', ' + props.margin.top + ')');
+	      this.legendspace.append("rect").attr('class', 'legendbox').attr('width', this.legendboxwidth).attr('height', props.data.length * 20 + this.boxmargin * 2);
+	
 	      this.updateChart(props);
 	    }
 	  }, {
@@ -30154,94 +30401,102 @@
 	    value: function updateChart(props) {
 	      //this should be called everytime something in the chart has to change
 	      this.updateTitle(props);
-	      this.updateBars(props);
+	      this.updatePie(props);
+	      this.updateLegend(props);
 	    }
 	  }, {
 	    key: 'updateTitle',
 	    value: function updateTitle(props) {
-	      this.place.select("h3").text(props.title || "Untitled");
+	      this.place.select("h3").text(props.title);
 	    }
 	  }, {
-	    key: 'updateBars',
-	    value: function updateBars(props) {
+	    key: 'updateLegend',
+	    value: function updateLegend(props) {
+	      var _this2 = this;
 	
-	      var framewidth = this.refs.chart.offsetWidth;
-	      var frameheight = this.refs.chart.offsetHeight;
+	      var textsize = 20;
+	      var update_entry = this.legendspace.selectAll(".entry").data(props.data);
+	      var enter_entry = update_entry.enter().append("g").attr("class", "entry");
+	      var exit_entry = update_entry.exit().remove();
 	
-	      var chartdata = props.data || [];
-	      var margin = { top: 30, right: 10, bottom: 30, left: 50 };
+	      enter_entry.append("rect").attr('class', 'legendsquare').attr('width', textsize).attr('height', textsize).attr('x', this.boxmargin).attr("y", function (d, i) {
+	        return i * textsize + _this2.boxmargin;
+	      }).style("fill", function (d, i) {
+	        return _this2.colors(i);
+	      });
+	      enter_entry.append("text").attr('class', 'legendtext').attr('height', textsize).attr('x', textsize + 5 + this.boxmargin).attr("y", function (d, i) {
+	        return i * textsize + textsize - 3 + _this2.boxmargin;
+	      }).text(function (d) {
+	        return d.name;
+	      });
+	    }
+	  }, {
+	    key: 'updatePie',
+	    value: function updatePie(props) {
+	      var _this3 = this;
 	
-	      var height = frameheight - margin.top - margin.bottom,
-	          width = framewidth - margin.left - margin.right,
-	          barWidth = 40,
-	          barOffset = 20;
-	
-	      var dynamicColor;
-	      var yScale = _d2.default.scale.linear().domain([0, _d2.default.max(chartdata, function (d) {
+	      var dynamicColor = void 0;
+	      var arc = _d2.default.svg.arc().outerRadius(this.outerRadius).innerRadius(this.innerRadius);
+	      var pie = _d2.default.layout.pie().value(function (d) {
 	        return d.value;
-	      })]).range([0, height]);
+	      });
 	
-	      var xScale = _d2.default.scale.ordinal().domain(_d2.default.range(0, chartdata.length)).rangeBands([0, width]);
+	      var update_slice = this.chartspace.selectAll(".pieslice").data(pie(props.data));
+	      var enter_slice = update_slice.enter().append("g").attr("class", "pieslice");
+	      var exit_slice = update_slice.exit().remove();
 	
-	      var colors = _d2.default.scale.linear().domain([0, chartdata.length * 0.33, chartdata.length * 0.66, chartdata.length]).range(['#d6e9c6', '#bce8f1', '#faebcc', '#ebccd1']);
-	
-	      var awesome = this.chartframe.attr('class', 'chart').append('g').attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')').selectAll('rect').data(chartdata).enter().append('rect').attr('class', 'bar').style('fill', function (data, i) {
-	        return colors(i);
-	      }).attr('width', xScale.rangeBand()).attr('x', function (data, i) {
-	        return xScale(i);
-	      }).attr('height', 0).attr('y', height).on('mouseover', function (data) {
+	      enter_slice.append("path").attr("class", "slice").style("fill", function (d, i) {
+	        return _this3.colors(i);
+	      }).on('mouseover', function (data) {
 	        dynamicColor = this.style.fill;
 	        _d2.default.select(this).classed("mouseover", true).style('fill', _d2.default.rgb(dynamicColor).darker(0.1));
 	      }).on('mouseout', function (data) {
 	        _d2.default.select(this).classed("mouseover", false).style('fill', dynamicColor);
+	      }).transition().delay(function (d, i) {
+	        return i * 400;
+	      }).duration(500).attrTween('d', function (d) {
+	        var i = _d2.default.interpolate(d.startAngle, d.endAngle);
+	        return function (t) {
+	          d.endAngle = i(t);
+	          return arc(d);
+	        };
 	      });
 	
-	      awesome.transition().attr('height', function (data) {
-	        return yScale(data.value);
-	      }).attr('y', function (data) {
-	        return height - yScale(data.value);
-	      }).delay(function (data, i) {
-	        return i * 20;
-	      }).duration(2000).ease('elastic');
-	
-	      var verticalGuideScale = _d2.default.scale.linear().domain([0, _d2.default.max(chartdata, function (d) {
-	        return d.value;
-	      })]).range([height, 0]);
-	
-	      var vAxis = _d2.default.svg.axis().scale(verticalGuideScale).orient('left').ticks(10);
-	
-	      var verticalGuide = _d2.default.select('svg').append('g');
-	      vAxis(verticalGuide);
-	      verticalGuide.attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
-	      verticalGuide.selectAll('path').style({ fill: 'none', stroke: "#3c763d" });
-	      verticalGuide.selectAll('line').style({ stroke: "#3c763d" });
-	
-	      var hAxis = _d2.default.svg.axis().scale(xScale).orient('bottom').ticks(chartdata.size);
-	
-	      var horizontalGuide = _d2.default.select('svg').append('g');
-	      hAxis(horizontalGuide);
-	      horizontalGuide.attr('transform', 'translate(' + margin.left + ', ' + (height + margin.top) + ')');
-	      horizontalGuide.selectAll('path').style({ fill: 'none', stroke: "#3c763d" });
-	      horizontalGuide.selectAll('line').style({ stroke: "#3c763d" });
+	      update_slice.select(".slice").transition().duration(500).attrTween('d', function (d) {
+	        var i = _d2.default.interpolate(d.startAngle, d.endAngle);
+	        return function (t) {
+	          d.endAngle = i(t);
+	          return arc(d);
+	        };
+	      });
 	    }
 	  }]);
 	
-	  return BarChart;
+	  return PieChart;
 	}(_react2.default.Component);
 	
-	exports.default = BarChart;
+	exports.default = PieChart;
+	
+	
+	PieChart.defaultProps = {
+	  data: [],
+	  margin: { top: 10, right: 10, bottom: 10, left: 10 },
+	  title: 'Untitled',
+	  width: 550,
+	  height: 400
+	};
 
 /***/ },
 /* 166 */
 /*!************************************!*\
-  !*** ./src/app/BarChartStyles.css ***!
+  !*** ./src/app/PieChartStyles.css ***!
   \************************************/
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(/*! !./../../~/css-loader!./BarChartStyles.css */ 167);
+	var content = __webpack_require__(/*! !./../../~/css-loader!./PieChartStyles.css */ 167);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(/*! ./../../~/style-loader/addStyles.js */ 164)(content, {});
@@ -30250,8 +30505,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js!./BarChartStyles.css", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js!./BarChartStyles.css");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js!./PieChartStyles.css", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js!./PieChartStyles.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -30263,7 +30518,7 @@
 /***/ },
 /* 167 */
 /*!***************************************************!*\
-  !*** ./~/css-loader!./src/app/BarChartStyles.css ***!
+  !*** ./~/css-loader!./src/app/PieChartStyles.css ***!
   \***************************************************/
 /***/ function(module, exports, __webpack_require__) {
 
@@ -30272,7 +30527,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".bar{\n  stroke: #555;\n  stroke-width: 1;\n}\n\n.bar.mouseover{\n\n}\n", ""]);
+	exports.push([module.id, ".pieslice{\n  stroke: #555;\n}\n\n.donut{\n  fill: #eee;\n  stroke: #555;\n}\n\n.legendbox{\n  fill: #fff;\n  stroke: #555;\n}\n\n.legendsquare{\n  stroke: #555;\n}\n", ""]);
 	
 	// exports
 

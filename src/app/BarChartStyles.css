@@ -1,8 +1,13 @@
-.bar{
+.chartbar{
   stroke: #555;
   stroke-width: 1;
 }
 
-.bar.mouseover{
+.axisline{
+  fill: none;
+  stroke: #555;
+}
 
+.axislinetick{
+  stroke: #555;
 }

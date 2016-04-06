@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import BarChart from './BarChart.jsx';
+import PieChart from './PieChart.jsx';
 
 let mydata = [{name: "Germany", value: 80.62},
              {name: "France", value: 66.03},
@@ -21,12 +22,22 @@ class App extends React.Component {
     this.state = {datastate: mydata}
   }
   handleClick(){
-    this.state.datastate[4].population -= 100;
+    this.state.datastate.forEach((item,i)=>{
+      item.value = Math.round(Math.random()*1000);
+    });
+    this.setState({datastate: this.state.datastate});
     this.setState({title: "new title"});
     this.forceUpdate();
   }
   render () {
-    return <div style={{height: 400, width: 600}}><p> Hello React!</p><BarChart title={this.state.title} data={this.state.datastate}/><button onClick={this.handleClick.bind(this)}>change data</button></div>;
+    return (<div>
+      <p> D3 Charts!</p>
+      <div>
+      <div style={{width: '50%', display:'inline-box', float:'left'}}><BarChart title={this.state.title} data={this.state.datastate}/></div>
+      <div style={{width: '50%', display:'inline-box', float:'right'}}><PieChart title={this.state.title} data={this.state.datastate}/></div>
+      </div>
+      <button onClick={this.handleClick.bind(this)}>change data</button>
+    </div>);
   }
 }
 
